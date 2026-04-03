@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NOVA OS | ALLAWI EDITION</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-red: #ff0000;
+            --dark-bg: #000000;
+            --card-bg: rgba(10, 10, 10, 0.98);
+            --border: rgba(255, 0, 0, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body { height: 100vh; width: 100vw; background: var(--dark-bg); color: #fff; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* وضع التخفي (Blur) */
+        .stealth-active { filter: blur(35px) !important; opacity: 0.1 !important; pointer-events: none; }
+
+        header { height: 50px; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: #000; z-index: 110; }
+        .sys-status { display: flex; gap: 12px; font-size: 0.7rem; color: #666; align-items: center; }
+        .logo { color: var(--neon-red); font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-red); font-size: 1rem; }
+
+        /* شريط الأنباء - مكانه الجديد ليفوق */
+        .news-ticker {
+            width: 100%; height: 22px; background: rgba(255,0,0,0.08); 
+            border-bottom: 1px solid var(--border);
+            overflow: hidden; white-space: nowrap; display: flex; align-items: center;
+            z-index: 105;
+        }
+        .ticker-text {
+            display: inline-block; padding-left: 100%; animation: ticker 20s linear infinite;
+            color: #eee; font-size: 0.7rem; font-weight: bold;
+        }
+        @keyframes ticker { 0% { transform: translate(0, 0); } 100% { transform: translate(100%, 0); } }
+
+        .nova-scroll-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 15px; scrollbar-width: none; }
+        .nova-scroll-view::-webkit-scrollbar { display: none; }
+
+        .greet-box { width: 90%; max-width: 400px; margin-top: 15px; border-right: 3px solid var(--neon-red); padding-right: 10px; }
+        #greet-text { font-size: 1.1rem; font-weight: bold; color: #fff; }
+
+        .nova-title { font-size: 2.8rem; font-weight: 900; color: var(--neon-red); text-shadow: 0 0 15px var(--neon-red); letter-spacing: 5px; margin: 10px 0; }
+
+        .search-container { width: 85%; max-width: 350px; position: relative; }
+        #search-input { width: 100%; background: #080808; border: 1px solid var(--border); border-radius: 30px; padding: 10px 20px 10px 45px; color: #fff; font-size: 0.95rem; outline: none; text-align: center; }
+        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--neon-red); }
+
+        .feed-card { width: 92%; max-width: 420px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .card-header { display: flex; align-items: center; gap: 8px; color: var(--neon-red); font-size: 0.8rem; font-weight: bold; border-bottom: 1px solid #1a1a1a; padding-bottom: 8px; }
+
+        .live-match-wrapper { width: 100%; height: 350px; border-radius: 12px; overflow: hidden; filter: invert(0.9) hue-rotate(180deg) brightness(1.1) contrast(1.2); }
+
+        footer { height: 60px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); background: #000; z-index: 100; }
+        .nav-icon { color: #444; font-size: 1.2rem; cursor: pointer; }
+        .nav-icon.active { color: var(--neon-red); text-shadow: 0 0 8px var(--neon-red); }
+
+        #web-frame { position: absolute; top: 50px; left: 0; width: 100%; height: calc(100vh - 110px); border: none; display: none; background: #fff; z-index: 200; }
+    </style>
+</head>
+<body>
+
+<div id="system-ui" style="height: 100vh; display: flex; flex-direction: column;">
+    <header>
+        <div class="logo">NOVA</div>
+        <div class="sys-status">
+            <i class="fas fa-eye" id="stealth-trigger" style="color:var(--neon-red); cursor:pointer; font-size: 1rem;"></i>
+            <span id="bat-stat">--%</span>
+            <span id="time-stat">00:00</span>
+        </div>
+    </header>
+
+    <div class="news-ticker">
+        <div class="ticker-text" id="ticker-data">جاري تحديث البيانات...</div>
+    </div>
+
+    <div class="nova-scroll-view" id="home">
+        <div class="greet-box">
+            <div id="greet-text">أهلاً بك، Developer</div>
+            <div id="date-text" style="font-size: 0.7rem; color: #888;">--</div>
+        </div>
+
+        <div class="nova-title">NOVA</div>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="ابحث في نظام نوفا..." onkeydown="if(event.key==='Enter') doSearch()">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+
+        <!-- كارت المباريات -->
+        <div class="feed-card">
+            <div class="card-header"><i class="fas fa-trophy"></i> المباريات المباشرة</div>
+            <div class="live-match-wrapper">
+                <iframe src="https://www.scorebat.com/embed/livescore/" frameborder="0" width="100%" height="100%"></iframe>
+            </div>
+        </div>
+
+        <!-- كارت الطقس والمالية -->
+        <div class="feed-card" style="flex-direction: row; justify-content: space-between; padding: 12px 20px;">
+            <div><span style="font-size:0.65rem; color:var(--neon-red);">النجف</span><br><span id="temp" style="font-size:1.2rem; font-weight:900;">--°C</span></div>
+            <div><span style="font-size:0.65rem; color:var(--neon-red);">BTC</span><br><span id="btc-val" style="font-size:0.9rem; font-weight:bold;">$--,---</span></div>
+        </div>
+    </div>
+
+    <iframe id="web-frame" src="about:blank"></iframe>
+
+    <footer>
+        <i class="fas fa-chevron-right nav-icon active" onclick="window.history.back()"></i>
+        <i class="fas fa-sync-alt nav-icon active" onclick="location.reload()"></i>
+        <i class="fas fa-home nav-icon active" onclick="goHome()"></i>
+        <i class="fas fa-chevron-left nav-icon active" onclick="window.history.forward()"></i>
+    </footer>
+</div>
+
+<script>
+    const home = document.getElementById('home');
+    const frame = document.getElementById('web-frame');
+    const input = document.getElementById('search-input');
+    const sysContainer = document.getElementById('system-ui');
+
+    // ميزة التغبيش (Stealth Mode)
+    document.getElementById('stealth-trigger').onclick = () => {
+        sysContainer.classList.toggle('stealth-active');
+    };
+
+    function doSearch() {
+        let q = input.value.trim();
+        if(!q) return;
+        home.style.display = 'none'; frame.style.display = 'block';
+        frame.src = "https://www.google.com/search?q=" + encodeURIComponent(q) + "&igu=1";
+    }
+
+    function goHome() { frame.style.display = 'none'; home.style.display = 'flex'; frame.src = "about:blank"; }
+
+    async function updateData() {
+        try {
+            const now = new Date();
+            document.getElementById('time-stat').innerText = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+            document.getElementById('date-text').innerText = now.toLocaleDateString('ar-IQ', { weekday: 'long', month: 'long', day: 'numeric' });
+
+            const w = await fetch('https://api.open-meteo.com/v1/forecast?latitude=31.99&longitude=44.32&current_weather=true');
+            const wD = await w.json();
+            const temp = wD.current_weather.temperature;
+            document.getElementById('temp').innerText = `${temp}°C`;
+
+            const c = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+            const cD = await c.json();
+            const btc = cD.bitcoin.usd.toLocaleString();
+            document.getElementById('btc-val').innerText = `$${btc}`;
+
+            document.getElementById('ticker-data').innerText = `• BTC:$${btc} • طقس النجف: ${temp}°C • NOVA OS: Online • Developer: Allawi •`;
+            
+            if (navigator.getBattery) {
+                const b = await navigator.getBattery();
+                document.getElementById('bat-stat').innerText = `${Math.round(b.level * 100)}%`;
+            }
+        } catch(e) {}
+    }
+
+    updateData();
+    setInterval(updateData, 60000);
+</script>
+</body>
+</html>
